@@ -24,7 +24,9 @@ jobs:
             node-version: 14.x
         
         - run: npm ci
-        - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version
+        # this is the magic github context object, maybe grab branch name instead?
+        if: ${{ github.ref != 'refs/heads/main' }}
+        - run: npm version prerelease --preid=ci-${{ github.ref }} --no-git-tag-version
         - run: npm pack
         - name: Upload
           uses: actions/upload-artifact@v2
