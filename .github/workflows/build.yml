@@ -1,8 +1,11 @@
 name: Node.js CI
 
+if: ${{ github.ref == 'refs/heads/main' }}
 on:
   release:
     branches: [ main ]
+if: ${{ github.ref != 'refs/heads/main' }}
+on: merge
 jobs:
   build:
     runs-on: ubuntu-18.04
@@ -25,8 +28,8 @@ jobs:
         
         - run: npm ci
         # this is the magic github context object, maybe grab branch name instead?
-        if: ${{ github.ref != 'refs/heads/main' }}
-        - run: npm version prerelease --preid=ci-${{ github.ref }} --no-git-tag-version
+        - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version
+        #- run: npm version prerelease --preid=ci-${{ github.ref }} --no-git-tag-version
         - run: npm pack
         - name: Upload
           uses: actions/upload-artifact@v2
