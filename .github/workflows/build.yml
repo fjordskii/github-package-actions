@@ -51,3 +51,53 @@ jobs:
     - run: npm publish $(ls *.tgz)
       env:
         NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}} # magic github repo secret auto-gen'd at runtime
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - run: npm ci
+  package:
+      needs: [build]
+      runs-on: ubuntu-18.04
+      if: ${{ github.head_ref !== 'main' }}
+      steps:
+        - uses: actions/checkout@v2
+        - name: Use Node.js 14.x
+          uses: actions/setup-node@v1
+          with:
+            node-version: 14.x
+        
+        - run: npm ci
+        - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version # makes a pre-release
+        - run: npm pack
+        - name: Upload
+          uses: actions/upload-artifact@v2
+          with:
+              name: package
+              path: "*.tgz"
+  publish:
+    name: "Publish to GitHub Packages"
+    needs: [package]
+    runs-on: ubuntu-18.04
+    if: github.repository_owner == 'fjordskii'
+    steps:
+    - name: Upload
+      uses: actions/download-artifact@v2
+      with:
+          name: package
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+        registry-url: https://npm.pkg.github.com/
+        scope: "@fjordskii" # important for github package use, forces scope
+    - run: echo "registry=https://npm.pkg.github.com/@fjordskii" >> .npmrc
+    - run: npm publish $(ls *.tgz)
+      env:
+        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}} # magic github repo secret auto-gen'd at runtime
