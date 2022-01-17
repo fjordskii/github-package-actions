@@ -1,6 +1,5 @@
 name: Node.js CI
 
-if: ${{ github.ref == 'refs/heads/main' }}
 on:
   release:
     branches: [ main ]
@@ -25,9 +24,8 @@ jobs:
             node-version: 14.x
         
         - run: npm ci
-        # this is the magic github context object, maybe grab branch name instead?
+				# this is the magic github context object, maybe grab branch name instead?
         - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version
-        #- run: npm version prerelease --preid=ci-${{ github.ref }} --no-git-tag-version
         - run: npm pack
         - name: Upload
           uses: actions/upload-artifact@v2
@@ -48,8 +46,8 @@ jobs:
       with:
         node-version: 14.x
         registry-url: https://npm.pkg.github.com/
-        scope: "@fjordskii"
+        scope: "@fjordskii" # important for github package use, forces scope
     - run: echo "registry=https://npm.pkg.github.com/@fjordskii" >> .npmrc
     - run: npm publish $(ls *.tgz)
       env:
-        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}} # magic github repo secret auto-gen'd at runtime
