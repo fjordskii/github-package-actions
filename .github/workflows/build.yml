@@ -20,12 +20,15 @@ jobs:
       runs-on: ubuntu-18.04
       if: github.head_ref != 'main'
       steps:
+        - name: Dump GitHub context
+          env:
+            GITHUB_CONTEXT: ${{ toJSON(github) }}
+          run: echo "$GITHUB_CONTEXT"
         - uses: actions/checkout@v2
         - name: Use Node.js 14.x
           uses: actions/setup-node@v1
           with:
             node-version: 14.x
-        - run: echo ${{ github.payload.pull_request.head.ref }}
         - run: npm ci
         - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version # makes a pre-release
         - run: npm pack
