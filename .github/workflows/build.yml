@@ -4,8 +4,8 @@ if: ${{ github.ref == 'refs/heads/main' }}
 on:
   release:
     branches: [ main ]
-if: ${{ github.ref != 'refs/heads/main' }}
-on: merge
+# if: ${{ github.ref != 'refs/heads/main' }}
+# on: pull_request
 jobs:
   build:
     runs-on: ubuntu-18.04
