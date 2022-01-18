@@ -18,7 +18,7 @@ jobs:
   package:
       needs: [ build ]
       runs-on: ubuntu-18.04
-      if: github.head_ref != 'main'
+      if: github.head_ref != 'main' && github.event_name == 'pull_request'
       steps:
         - uses: actions/checkout@v2
         - name: Use Node.js 14.x
@@ -27,7 +27,7 @@ jobs:
             node-version: 14.x
         - run: echo ${{ github.payload.pull_request.head.ref }}
         - run: npm ci
-        - run: npm version prerelease --preid=ci-$GITHUB_RUN_ID --no-git-tag-version # makes a pre-release
+        - run: npm version prerelease --preid=pre-release-${{ github.head_ref }} --no-git-tag-version # makes a pre-release
         - run: npm pack
         - name: Upload
           uses: actions/upload-artifact@v2
