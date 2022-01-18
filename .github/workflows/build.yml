@@ -15,7 +15,7 @@ jobs:
       with:
         node-version: 14.x
     - run: npm ci
-  package:
+  pre-release-package:
       needs: [ build ]
       runs-on: ubuntu-18.04
       if: github.head_ref != 'main' && github.event_name == 'pull_request'
@@ -35,9 +35,52 @@ jobs:
           with:
               name: package
               path: "*.tgz"
-  publish:
+  prod-package:
+      needs: [ build ]
+      runs-on: ubuntu-18.04
+      if: github.event_name == 'release'
+      steps:
+        - run: echo "DATE_ID=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
+        - uses: actions/checkout@v2
+        - name: Use Node.js 14.x
+          uses: actions/setup-node@v1
+          with:
+            node-version: 14.x
+        - run: echo ${{ github.payload.pull_request.head.ref }}
+        - run: npm ci
+        - run: git config --global user.name 'Ford Heacock'
+        - run: git config --global user.email 'ford.heacock@dapperlabs.com'
+        - run: npm version patch -m "[RELEASE] %s"
+        - run: git push
+        - run: npm version patch 
+        - run: npm pack
+        - name: Upload
+          uses: actions/upload-artifact@v2
+          with:
+              name: package
+              path: "*.tgz"
+  pre-release-publish:
     name: "Publish to GitHub Packages"
-    needs: [ package ]
+    needs: [ pre-release-package ]
+    runs-on: ubuntu-18.04
+    if: github.repository_owner == 'fjordskii'
+    steps:
+    - name: Upload
+      uses: actions/download-artifact@v2
+      with:
+          name: package
+    - uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+        registry-url: https://npm.pkg.github.com/
+        scope: "@fjordskii" # important for github package use, forces scope
+    - run: echo "registry=https://npm.pkg.github.com/@fjordskii" >> .npmrc
+    - run: npm publish $(ls *.tgz)
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # magic github repo secret auto-gen'd at runtime
+  prod-publish:
+    name: "Publish to GitHub Packages"
+    needs: [ prod-package ]
     runs-on: ubuntu-18.04
     if: github.repository_owner == 'fjordskii'
     steps:
