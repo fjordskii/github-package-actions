@@ -15,7 +15,7 @@ jobs:
       with:
         node-version: 14.x
     - run: npm ci
-  package:
+  pre-release-package:
       needs: [ build ]
       runs-on: ubuntu-18.04
       if: github.head_ref != 'main' && github.event_name == 'pull_request'
@@ -29,6 +29,26 @@ jobs:
         - run: echo ${{ github.payload.pull_request.head.ref }}
         - run: npm ci
         - run: npm version prerelease --preid=pre-release-${{ env.DATE_ID }} --no-git-tag-version # makes a pre-release
+        - run: npm pack
+        - name: Upload
+          uses: actions/upload-artifact@v2
+          with:
+              name: package
+              path: "*.tgz"
+  prod-package:
+      needs: [ build ]
+      runs-on: ubuntu-18.04
+      if: github.event_name == 'release'
+      steps:
+        - run: echo "DATE_ID=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
+        - uses: actions/checkout@v2
+        - name: Use Node.js 14.x
+          uses: actions/setup-node@v1
+          with:
+            node-version: 14.x
+        - run: echo ${{ github.payload.pull_request.head.ref }}
+        - run: npm ci
+        - run: npm version patch 
         - run: npm pack
         - name: Upload
           uses: actions/upload-artifact@v2
