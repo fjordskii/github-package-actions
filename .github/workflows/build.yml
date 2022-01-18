@@ -48,6 +48,10 @@ jobs:
             node-version: 14.x
         - run: echo ${{ github.payload.pull_request.head.ref }}
         - run: npm ci
+        - run: git config --global user.name 'Ford Heacock'
+        - run: git config --global user.email 'ford.heacock@dapperlabs.com'
+        - run: npm version patch -m "[RELEASE] %s"
+        - run: git push
         - run: npm version patch 
         - run: npm pack
         - name: Upload
