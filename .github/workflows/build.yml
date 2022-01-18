@@ -51,7 +51,7 @@ jobs:
         - run: git config --global user.name 'Ford Heacock'
         - run: git config --global user.email 'ford.heacock@dapperlabs.com'
         - run: npm version patch -m "[RELEASE] %s"
-        - run: git push
+        - run: git push origin HEAD:main
         - run: npm version patch 
         - run: npm pack
         - name: Upload
