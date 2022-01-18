@@ -35,6 +35,23 @@ jobs:
           with:
               name: package
               path: "*.tgz"
+      if: github.event_name == 'release'
+      steps:
+        - run: echo "DATE_ID=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
+        - uses: actions/checkout@v2
+        - name: Use Node.js 14.x
+          uses: actions/setup-node@v1
+          with:
+            node-version: 14.x
+        - run: echo ${{ github.payload.pull_request.head.ref }}
+        - run: npm ci
+        - run: npm version patch 
+        - run: npm pack
+        - name: Upload
+          uses: actions/upload-artifact@v2
+          with:
+              name: package
+              path: "*.tgz"
   publish:
     name: "Publish to GitHub Packages"
     needs: [ package ]
